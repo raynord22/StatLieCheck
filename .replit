@@ -2,7 +2,7 @@ modules = ["python-3.11"]
 
 [nix]
 channel = "stable-25_05"
-packages = ["libxcrypt", "pkg-config", "xsimd"]
+packages = ["hdf5", "libxcrypt", "pkg-config", "xsimd"]
 
 [deployment]
 deploymentTarget = "autoscale"
@@ -26,7 +26,7 @@ args = "install_dependencies"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "Streamlit Server"
+args = "StatLieChecker App"
 
 [[workflows.workflow]]
 name = "Install Dependencies"
@@ -45,7 +45,7 @@ task = "shell.exec"
 args = "uv add scipy nltk"
 
 [[workflows.workflow]]
-name = "Streamlit Server"
+name = "StatLieChecker App"
 author = "agent"
 
 [[workflows.workflow.tasks]]
