@@ -12,11 +12,12 @@ StatLieChecker is a Streamlit-based web application designed to analyze statisti
 - Added comprehensive sidebar with Huff's principles and questions
 - Enhanced statistical significance testing with better error handling
 - Implemented chapter-by-chapter fallacy categorization (Chapters 1-10)
-- **MONETIZATION**: Added freemium model with SQLite user tracking
-- **MONETIZATION**: Implemented daily usage limits (5 free analyses per day)
-- **MONETIZATION**: Added premium subscription prompts and upgrade paths
-- **MONETIZATION**: Created user authentication system with email tracking
-- **MONETIZATION**: Added demo premium functionality for testing
+- **MONETIZATION**: Switched to ads-based freemium model with session tracking
+- **MONETIZATION**: Implemented session-based usage limits (3 free analyses per session)
+- **MONETIZATION**: Added Google AdSense placeholder for ad revenue
+- **MONETIZATION**: Created one-time $4.99 payment to remove ads forever
+- **MONETIZATION**: Added Stripe payment integration placeholder
+- **MONETIZATION**: Removed email tracking for simplified user experience
 
 ## User Preferences
 

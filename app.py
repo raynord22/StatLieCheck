@@ -2,8 +2,6 @@ import streamlit as st
 import scipy.stats as stats
 import nltk
 from nltk.tokenize import word_tokenize
-import sqlite3
-import datetime
 
 # Download required NLTK data
 try:
@@ -13,105 +11,23 @@ except Exception as e:
 
 st.title("StatLieChecker: Spot Lies in Any Statistic")
 
-# Initialize database for user tracking
-@st.cache_resource
-def init_database():
-    conn = sqlite3.connect('users.db', check_same_thread=False)
-    c = conn.cursor()
-    c.execute('''CREATE TABLE IF NOT EXISTS users 
-                 (email TEXT PRIMARY KEY, 
-                  analyses INTEGER DEFAULT 0, 
-                  last_reset DATE, 
-                  subscribed BOOLEAN DEFAULT 0,
-                  created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP)''')
-    conn.commit()
-    return conn
+# Initialize session state for tracking usage and ad-free status
+if 'analyses' not in st.session_state:
+    st.session_state.analyses = 0
+if 'ad_free' not in st.session_state:
+    st.session_state.ad_free = False
 
-# Initialize database connection
-db_conn = init_database()
+# Display usage status
+free_limit = 3
+usage_remaining = max(0, free_limit - st.session_state.analyses)
 
-# User authentication section
-st.subheader("🔐 Start Your Statistical Analysis")
-email = st.text_input(
-    "Enter your email to track usage (or use 'demo@example.com' for testing):", 
-    placeholder="your.email@example.com",
-    help="We use this to track your daily free analysis limit. Premium users get unlimited access."
-)
-
-# Check user usage and subscription status
-if email:
-    c = db_conn.cursor()
-    
-    # Get or create user record
-    c.execute("SELECT analyses, last_reset, subscribed FROM users WHERE email=?", (email,))
-    row = c.fetchone()
-    today = datetime.date.today().isoformat()
-    
-    if row:
-        analyses, last_reset, subscribed = row
-        # Reset daily count if new day
-        if last_reset != today:
-            analyses = 0
-            c.execute("UPDATE users SET analyses=0, last_reset=? WHERE email=?", (today, email))
-            db_conn.commit()
-    else:
-        # Create new user
-        analyses = 0
-        subscribed = False
-        c.execute("INSERT INTO users (email, analyses, last_reset, subscribed) VALUES (?, 0, ?, 0)", 
-                 (email, today))
-        db_conn.commit()
-    
-    # Display usage status
-    if subscribed:
-        st.success("✅ **Premium User** - Unlimited analyses")
-        usage_remaining = "Unlimited"
-        can_analyze = True
-    else:
-        free_limit = 5
-        usage_remaining = max(0, free_limit - analyses)
-        can_analyze = analyses < free_limit
-        
-        if usage_remaining > 0:
-            st.info(f"🆓 **Free Plan** - {usage_remaining} analyses remaining today")
-        else:
-            st.error("🚫 **Daily limit reached** - Upgrade to Premium for unlimited access")
-            
-    # Premium upgrade prompt for free users
-    if not subscribed:
-        with st.expander("🚀 Upgrade to Premium - $4.99/month", expanded=(usage_remaining == 0)):
-            col1, col2 = st.columns(2)
-            with col1:
-                st.markdown("**Premium Benefits:**")
-                st.write("• ✅ Unlimited daily analyses")
-                st.write("• 📊 All statistical fallacy detection types")
-                st.write("• 🔍 Statistical significance calculator")
-            
-            with col2:
-                st.markdown("**Perfect for:**")
-                st.write("• 🎓 Students and researchers")
-                st.write("• 📰 Journalists and fact-checkers")
-                st.write("• 💼 Business analysts")
-                st.write("• 🏫 Educators and trainers")
-                
-            st.markdown("### 💳 Subscribe Now")
-            st.markdown(
-                "[**Subscribe for $4.99/month**](https://buy.stripe.com/test_link) | "
-                "[**Annual Plan - $49.99/year**](https://buy.stripe.com/test_annual) (Save 17%)"
-            )
-            st.caption("Secure payment powered by Stripe. Cancel anytime.")
-            
-            # Demo subscription button (for testing)
-            if st.button("🧪 Enable Premium (Demo)", help="For testing purposes - simulates subscription"):
-                c.execute("UPDATE users SET subscribed=1 WHERE email=?", (email,))
-                db_conn.commit()
-                st.success("Demo premium activated! Refresh the page.")
-                st.rerun()
+if st.session_state.ad_free:
+    st.success("✅ **Ad-Free User** - Unlimited analyses, no ads")
 else:
-    st.warning("⚠️ Please enter your email to start analyzing statistical claims.")
-    can_analyze = False
-    usage_remaining = 0
-    subscribed = False  # Default for when no email is provided
+    if usage_remaining > 0:
+        st.info(f"🆓 **Free with ads** - {usage_remaining} analyses remaining in this session")
+    else:
+        st.warning("🚫 **Session limit reached** - Remove ads for unlimited access")
 
 # Statistical claim input
 st.subheader("✍️ Enter Your Statistical Claim")
@@ -134,19 +50,18 @@ with col2:
     mean2 = st.number_input("Mean of group 2", value=0.0, help="Average value for comparison group")
     sd2 = st.number_input("Standard deviation of group 2", value=0.0, help="Measure of data spread in group 2")
 
-# Analysis button - only enabled if user can analyze
-analyze_button = st.button(
-    "🔍 Analyze Statistical Claim", 
-    type="primary", 
-    use_container_width=True,
-    disabled=not can_analyze,
-    help="Analyze your statistical claim for potential fallacies" if can_analyze else "Upgrade to Premium or wait until tomorrow for more free analyses"
-)
-
-if analyze_button and can_analyze:
+# Analysis button
+if st.button("🔍 Analyze Statistical Claim", type="primary", use_container_width=True):
     if not claim.strip():
-        st.error("Please enter or capture a statistical claim to analyze.")
+        st.error("Please enter a statistical claim to analyze.")
     else:
+        # Check if user has reached free limit
+        if not st.session_state.ad_free and st.session_state.analyses >= free_limit:
+            st.error("🚫 **Free limit reached** - Remove ads for unlimited access!")
+        else:
+            # Increment usage count
+            if not st.session_state.ad_free:
+                st.session_state.analyses += 1
         # Tokenize text with fallback for NLTK
         try:
             tokens = word_tokenize(claim.lower())
@@ -335,19 +250,64 @@ if analyze_button and can_analyze:
             "'How to Lie with Statistics' - still the best introduction to statistical skepticism ever written."
         )
         
-        # Update user's analysis count (for free users only)
-        if email and not subscribed:
-            c = db_conn.cursor()
-            c.execute("UPDATE users SET analyses = analyses + 1 WHERE email=?", (email,))
-            db_conn.commit()
-        
-        # Premium features promotion
-        if not subscribed:
+        # Show ads if user is on free plan
+        if not st.session_state.ad_free:
             st.markdown("---")
-            st.info(
-                "🚀 **Want unlimited analyses?** Premium users can analyze as many statistical claims as they want. "
-                "[Upgrade now for $4.99/month](https://buy.stripe.com/test_link)"
-            )
+            st.markdown("### 📢 Advertisement")
+            
+            # Placeholder for Google AdSense - replace with your actual AdSense code
+            st.markdown("""
+            <div style="border: 2px dashed #cccccc; padding: 20px; text-align: center; margin: 10px 0; background-color: #f8f9fa;">
+                <p style="color: #666; margin: 0;"><strong>Your Google AdSense Ad Here</strong></p>
+                <p style="color: #999; font-size: 12px; margin: 5px 0 0 0;">Replace this placeholder with your AdSense code</p>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # Alternative: Simple affiliate or promotional content
+            st.info("📚 **Learn more statistical literacy** - Get the book 'How to Lie with Statistics' that inspired this tool!")
+            
+            st.markdown("---")
+            st.info("💡 **Remove ads forever** - One-time payment of $4.99 for unlimited ad-free analyses!")
+
+# Ad-free upgrade section
+if not st.session_state.ad_free:
+    st.markdown("---")
+    st.subheader("🚀 Remove Ads Forever - $4.99")
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        st.markdown("**What you get:**")
+        st.write("• ✅ Unlimited statistical analyses")
+        st.write("• 🚫 No more advertisements")
+        st.write("• 🔍 All fallacy detection features")
+        st.write("• 📊 Statistical significance calculator")
+    
+    with col2:
+        st.markdown("**Perfect for:**")
+        st.write("• 📰 Journalists fact-checking claims")
+        st.write("• 🎓 Students studying statistics")
+        st.write("• 💼 Professionals analyzing data")
+        st.write("• 🧠 Anyone who values critical thinking")
+    
+    # Stripe payment button placeholder
+    st.markdown("### 💳 One-Time Payment")
+    if st.button("💰 Pay $4.99 - Remove Ads Forever", type="primary", use_container_width=True):
+        st.info("🔗 **Payment integration needed** - Add your Stripe checkout link here")
+        st.code("""
+# Add your Stripe integration here:
+# 1. Get your Stripe API keys from dashboard.stripe.com
+# 2. Create a checkout session
+# 3. Redirect to payment page
+# 4. Handle success callback to set st.session_state.ad_free = True
+        """)
+    
+    # Demo button for testing
+    if st.button("🧪 Enable Ad-Free (Demo)", help="For testing - simulates successful payment"):
+        st.session_state.ad_free = True
+        st.success("✅ Ad-free activated! Refresh to see changes.")
+        st.rerun()
+        
+    st.caption("💡 Secure payment powered by Stripe. One-time payment, no subscription.")
 
 # Footer with book attribution
 st.markdown("---")
@@ -397,24 +357,12 @@ with st.sidebar:
     st.write("9. How to Statisticulate")
     st.write("10. How to Talk Back")
     
-    # Usage statistics for the current user
-    if email:
-        c = db_conn.cursor()
-        c.execute("SELECT analyses, subscribed, created_date FROM users WHERE email=?", (email,))
-        user_data = c.fetchone()
-        if user_data:
-            analyses_today, is_subscribed, created = user_data
-            st.markdown("---")
-            st.subheader("📊 Your Usage")
-            if is_subscribed:
-                st.success("✅ Premium Member")
-            else:
-                st.write(f"📈 Analyses today: {analyses_today}/5")
-                st.write(f"📅 Member since: {created[:10] if created else 'Today'}")
-                
-            if not is_subscribed and analyses_today >= 3:
-                st.info("💡 Consider upgrading to Premium for unlimited access!")
-
-# Database cleanup on app close
-import atexit
-atexit.register(lambda: db_conn.close())
+    # Session statistics
+    st.markdown("---")
+    st.subheader("📊 Session Stats")
+    if st.session_state.ad_free:
+        st.success("✅ Ad-Free User - Unlimited access")
+    else:
+        st.write(f"📈 Analyses used: {st.session_state.analyses}/{free_limit}")
+        if st.session_state.analyses >= 2:
+            st.info("💡 Consider removing ads for unlimited access!")

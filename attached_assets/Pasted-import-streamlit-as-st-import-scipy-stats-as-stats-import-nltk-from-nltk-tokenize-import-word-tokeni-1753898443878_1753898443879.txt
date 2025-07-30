@@ -1,0 +1,129 @@
+import streamlit as st
+import scipy.stats as stats
+import nltk
+from nltk.tokenize import word_tokenize
+import stripe  # For payments
+
+nltk.download('punkt', quiet=True)
+
+st.title("StatLieChecker: Spot Lies in Any Statistic")
+
+# Freemium with ads: Session state for limit and ad removal
+if 'analyses' not in st.session_state:
+    st.session_state.analyses = 0
+if 'ad_free' not in st.session_state:
+    st.session_state.ad_free = False
+
+st.write(f"Free analyses left: {3 - st.session_state.analyses if not st.session_state.ad_free else 'Unlimited (Ad-Free)'}")
+
+# User input
+claim = st.text_area("Enter any statistic claim (e.g., 'This workout boosts endurance by 20% in 30 days' or 'Vaccines reduce risk by 95%')")
+sample_size = st.number_input("Sample size (n)", min_value=0, value=0)
+mean1 = st.number_input("Mean of group 1 (optional for t-test)", value=0.0)
+mean2 = st.number_input("Mean of group 2 (optional)", value=0.0)
+sd1 = st.number_input("SD of group 1 (optional)", value=0.0)
+sd2 = st.number_input("SD of group 2 (optional)", value=0.0)
+
+if st.button("Analyze Stat"):
+    if not claim:
+        st.error("Enter a claim to analyze.")
+    else:
+        if not st.session_state.ad_free and st.session_state.analyses >= 3:
+            st.warning("Free limit reached—pay to remove ads and get unlimited.")
+        else:
+            st.session_state.analyses += 1
+            tokens = word_tokenize(claim.lower())
+
+            # Fallacy checks
+            fallacies = []
+            lie_level = "Low"
+
+            if sample_size > 0 and sample_size < 30:
+                fallacies.append("Small Sample Fallacy: With n=" + str(sample_size) + ", results might be random luck, not real. Book tip: Small groups exaggerate extremes—like polling 5 friends on politics.")
+                lie_level = "Medium"
+            if "average" in tokens or "mean" in tokens:
+                fallacies.append("Misleading Averages: Averages hide outliers. Book example: 'Average' income looks high if one millionaire skews it.")
+                lie_level = "Medium"
+            if "percent" in tokens and ("increase" in tokens or "decrease" in tokens):
+                fallacies.append("Percentage Tricks: Percentages sound big without context. Book tip: 100% increase from 1 to 2 is just +1—check absolute numbers.")
+                lie_level = "Medium"
+            if "correlation" in tokens or "related" in tokens:
+                fallacies.append("Correlation vs Causation (Post Hoc Fallacy): Just because things happen together doesn't mean one causes the other. Book example: Roosters crow at dawn, but they don't cause the sun to rise.")
+                lie_level = "High"
+            if "graph" in tokens or "chart" in tokens:
+                fallacies.append("Graphical Tricks: Charts can distort reality. Book tip: Truncated axes make tiny changes look huge.")
+                lie_level = "Medium"
+            if "sample" in tokens or "survey" in tokens:
+                fallacies.append("Biased Sample: Surveys can skew if the group isn't representative. Book tip: Asking only rich people about taxes gets biased answers.")
+                lie_level = "High"
+            if "survive" in tokens or "success" in tokens:
+                fallacies.append("Survivorship Bias: Focusing on winners ignores failures. Book tip: WW2 planes showed bullet holes on survivors—but reinforce where holes weren't.")
+                lie_level = "High"
+            if "rate" in tokens and "base" not in tokens:
+                fallacies.append("Base-Rate Fallacy: Ignores overall odds. Book tip: A 99% accurate test for a rare disease (1/1000) still gives mostly false positives.")
+                lie_level = "High"
+            if not fallacies:
+                fallacies.append("No obvious fallacies—seems solid, but double-check sources and context. Book tip: Always ask 'Who says so?' and 'How do they know?'")
+
+            # Significance
+            significance = ""
+            if mean1 and mean2 and sd1 and sd2 and sample_size > 1:
+                t_stat, p_value = stats.ttest_ind_from_stats(mean1, sd1, sample_size, mean2, sd2, sample_size)
+                significance = f"P-value: {p_value:.4f}. "
+                if p_value < 0.05:
+                    significance += "Likely significant (not just chance)—but watch for biases."
+                else:
+                    significance += "Not significant—could be random variation. Book tip: Insignificant differences are often hyped as breakthroughs."
+                if p_value > 0.05:
+                    lie_level = "High"
+
+            # Output
+            st.write("### Lie Level: " + lie_level)
+            st.write("Claim: " + claim)
+            st.write("Fallacies Detected:")
+            for f in fallacies:
+                st.write("- " + f)
+            if significance:
+                st.write("Significance Check: " + significance)
+            st.write("Simple Explanation: Stats can trick you—use this to spot them and make better decisions in health, sports, or news.")
+
+            # Ads if not ad-free
+            if not st.session_state.ad_free:
+                st.markdown("""
+                <!-- Your Google Adsense Script Here - Replace with your code from adsense.google.com -->
+                <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=YOUR_CLIENT_ID"
+                     crossorigin="anonymous"></script>
+                <ins class="adsbygoogle"
+                     style="display:block"
+                     data-ad-client="YOUR_CLIENT_ID"
+                     data-ad-slot="YOUR_AD_SLOT"
+                     data-ad-format="auto"
+                     data-full-width-responsive="true"></ins>
+                <script>
+                     (adsbygoogle = window.adsbygoogle || []).push({});
+                </script>
+                """, unsafe_allow_html=True)
+
+# Pay to remove ads (one-time $4.99)
+stripe.api_key = 'YOUR_STRIPE_KEY'  # From Stripe dashboard (test mode)
+if not st.session_state.ad_free:
+    if st.button("Pay $4.99 to Remove Ads Forever"):
+        session = stripe.checkout.Session.create(
+            payment_method_types=['card'],
+            line_items=[{
+                'price_data': {
+                    'currency': 'usd',
+                    'product_data': {'name': 'Ad-Free StatLieChecker'},
+                    'unit_amount': 499,
+                },
+                'quantity': 1,
+            }],
+            mode='payment',
+            success_url='https://yourrepl.replit.app?session_id={CHECKOUT_SESSION_ID}',
+            cancel_url='https://yourrepl.replit.app',
+        )
+        st.write(f"[Pay with Stripe]({session.url})")
+else:
+    st.success("Ad-Free—enjoy unlimited access!")
+
+st.write("Inspired by 'How to Lie with Statistics'—empowering anyone to check claims in everyday life.")
