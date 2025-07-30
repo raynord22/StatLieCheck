@@ -245,12 +245,20 @@ if st.button("🔍 Analyze Statistical Claim", type="primary", use_container_wid
             st.markdown("---")
             st.markdown("### 📢 Advertisement")
             
-            # Placeholder for Google AdSense - replace with your actual AdSense code
+            # Google AdSense Integration
             st.markdown("""
-            <div style="border: 2px dashed #cccccc; padding: 20px; text-align: center; margin: 10px 0; background-color: #f8f9fa;">
-                <p style="color: #666; margin: 0;"><strong>Your Google AdSense Ad Here</strong></p>
-                <p style="color: #999; font-size: 12px; margin: 5px 0 0 0;">Replace this placeholder with your AdSense code</p>
-            </div>
+            <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5201605536254896"
+                 crossorigin="anonymous"></script>
+            <!-- StatLieChecker Ad -->
+            <ins class="adsbygoogle"
+                 style="display:block"
+                 data-ad-client="ca-pub-5201605536254896"
+                 data-ad-slot="auto"
+                 data-ad-format="auto"
+                 data-full-width-responsive="true"></ins>
+            <script>
+                 (adsbygoogle = window.adsbygoogle || []).push({});
+            </script>
             """, unsafe_allow_html=True)
             
             # Alternative: Simple affiliate or promotional content
@@ -282,14 +290,12 @@ if not st.session_state.ad_free:
     # Stripe payment button placeholder
     st.markdown("### 💳 One-Time Payment - No Subscription")
     if st.button("💰 Go Premium - $4.99 (Remove Ads Forever)", type="primary", use_container_width=True):
-        st.info("🔗 **Payment integration needed** - Add your Stripe checkout link here")
-        st.code("""
-# Add your Stripe integration here:
-# 1. Get your Stripe API keys from dashboard.stripe.com
-# 2. Create a checkout session
-# 3. Redirect to payment page
-# 4. Handle success callback to set st.session_state.ad_free = True
-        """)
+        st.info("🔗 **Stripe integration ready** - Add your Stripe checkout URL here")
+        st.markdown("**Next steps for Stripe integration:**")
+        st.write("1. Create a product in your Stripe dashboard for $4.99")
+        st.write("2. Generate a payment link")
+        st.write("3. Replace the URL below with your Stripe payment link")
+        st.code("# Your Stripe payment URL will go here")
     
     # Demo button for testing
     if st.button("🧪 Enable Ad-Free (Demo)", help="For testing - simulates successful payment"):
