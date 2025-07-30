@@ -13,7 +13,7 @@ StatLieChecker is a Streamlit-based web application designed to analyze statisti
 - Enhanced statistical significance testing with better error handling
 - Implemented chapter-by-chapter fallacy categorization (Chapters 1-10)
 - **MONETIZATION**: Switched to ads-based freemium model with session tracking
-- **MONETIZATION**: Implemented session-based usage limits (3 free analyses per session)
+- **MONETIZATION**: Free version includes ads, premium removes ads with one-time payment
 - **MONETIZATION**: Added Google AdSense placeholder for ad revenue
 - **MONETIZATION**: Created one-time $4.99 payment to remove ads forever
 - **MONETIZATION**: Added Stripe payment integration placeholder

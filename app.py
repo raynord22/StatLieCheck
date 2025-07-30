@@ -17,17 +17,11 @@ if 'analyses' not in st.session_state:
 if 'ad_free' not in st.session_state:
     st.session_state.ad_free = False
 
-# Display usage status
-free_limit = 3
-usage_remaining = max(0, free_limit - st.session_state.analyses)
-
+# Display user status
 if st.session_state.ad_free:
-    st.success("✅ **Ad-Free User** - Unlimited analyses, no ads")
+    st.success("✅ **Premium User** - Unlimited analyses, no ads")
 else:
-    if usage_remaining > 0:
-        st.info(f"🆓 **Free with ads** - {usage_remaining} analyses remaining in this session")
-    else:
-        st.warning("🚫 **Session limit reached** - Remove ads for unlimited access")
+    st.info("🆓 **Free Version** - Includes ads between analyses")
 
 # Statistical claim input
 st.subheader("✍️ Enter Your Statistical Claim")
@@ -55,13 +49,9 @@ if st.button("🔍 Analyze Statistical Claim", type="primary", use_container_wid
     if not claim.strip():
         st.error("Please enter a statistical claim to analyze.")
     else:
-        # Check if user has reached free limit
-        if not st.session_state.ad_free and st.session_state.analyses >= free_limit:
-            st.error("🚫 **Free limit reached** - Remove ads for unlimited access!")
-        else:
-            # Increment usage count
-            if not st.session_state.ad_free:
-                st.session_state.analyses += 1
+        # Track usage for analytics (optional)
+        st.session_state.analyses += 1
+        
         # Tokenize text with fallback for NLTK
         try:
             tokens = word_tokenize(claim.lower())
@@ -272,15 +262,15 @@ if st.button("🔍 Analyze Statistical Claim", type="primary", use_container_wid
 # Ad-free upgrade section
 if not st.session_state.ad_free:
     st.markdown("---")
-    st.subheader("🚀 Remove Ads Forever - $4.99")
+    st.subheader("🚀 Go Premium - One-Time $4.99")
     
     col1, col2 = st.columns(2)
     with col1:
-        st.markdown("**What you get:**")
-        st.write("• ✅ Unlimited statistical analyses")
-        st.write("• 🚫 No more advertisements")
-        st.write("• 🔍 All fallacy detection features")
+        st.markdown("**Premium Benefits:**")
+        st.write("• 🚫 Remove all advertisements")
+        st.write("• 🔍 All statistical fallacy detection")
         st.write("• 📊 Statistical significance calculator")
+        st.write("• ⚡ Clean, uninterrupted experience")
     
     with col2:
         st.markdown("**Perfect for:**")
@@ -290,8 +280,8 @@ if not st.session_state.ad_free:
         st.write("• 🧠 Anyone who values critical thinking")
     
     # Stripe payment button placeholder
-    st.markdown("### 💳 One-Time Payment")
-    if st.button("💰 Pay $4.99 - Remove Ads Forever", type="primary", use_container_width=True):
+    st.markdown("### 💳 One-Time Payment - No Subscription")
+    if st.button("💰 Go Premium - $4.99 (Remove Ads Forever)", type="primary", use_container_width=True):
         st.info("🔗 **Payment integration needed** - Add your Stripe checkout link here")
         st.code("""
 # Add your Stripe integration here:
@@ -307,7 +297,7 @@ if not st.session_state.ad_free:
         st.success("✅ Ad-free activated! Refresh to see changes.")
         st.rerun()
         
-    st.caption("💡 Secure payment powered by Stripe. One-time payment, no subscription.")
+    st.caption("💡 Secure payment powered by Stripe. One-time payment, no monthly fees.")
 
 # Footer with book attribution
 st.markdown("---")
@@ -361,8 +351,8 @@ with st.sidebar:
     st.markdown("---")
     st.subheader("📊 Session Stats")
     if st.session_state.ad_free:
-        st.success("✅ Ad-Free User - Unlimited access")
+        st.success("✅ Premium User - Ad-free experience")
     else:
-        st.write(f"📈 Analyses used: {st.session_state.analyses}/{free_limit}")
+        st.write(f"📈 Analyses completed: {st.session_state.analyses}")
         if st.session_state.analyses >= 2:
-            st.info("💡 Consider removing ads for unlimited access!")
+            st.info("💡 Enjoying the tool? Consider going premium for an ad-free experience!")
