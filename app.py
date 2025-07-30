@@ -2,17 +2,8 @@ import streamlit as st
 import scipy.stats as stats
 import nltk
 from nltk.tokenize import word_tokenize
-from io import BytesIO
 import sqlite3
 import datetime
-
-# Try to import EasyOCR for camera functionality
-try:
-    import easyocr
-    OCR_AVAILABLE = True
-except ImportError:
-    OCR_AVAILABLE = False
-    easyocr = None  # Define to avoid unbound variable error
 
 # Download required NLTK data
 try:
@@ -124,36 +115,10 @@ else:
     usage_remaining = 0
     subscribed = False  # Default for when no email is provided
 
-# Camera input for OCR (if available)
-extracted_text = ""
-if OCR_AVAILABLE:
-    st.subheader("📱 Option 1: Use Camera to Capture Text")
-    camera_image = st.camera_input("Take a photo of the statistic you want to analyze")
-    
-    if camera_image and easyocr:
-        with st.spinner("Extracting text from image..."):
-            try:
-                # Extract text with EasyOCR
-                reader = easyocr.Reader(['en'], gpu=False)  # English, no GPU needed
-                bytes_data = camera_image.getvalue()
-                result = reader.readtext(bytes_data)
-                extracted_text = ' '.join([text[1] for text in result if text[1]])
-                
-                if extracted_text:
-                    st.success(f"✅ **Extracted Text:** {extracted_text}")
-                else:
-                    st.warning("⚠️ No text detected—try a clearer photo or enter manually below.")
-            except Exception as e:
-                st.error(f"Error processing image: {e}")
-                extracted_text = ""
-else:
-    st.info("📝 Camera OCR feature requires additional setup. Using manual text input only.")
-
-# Manual input section
-st.subheader("✍️ Option 2: Enter Statistic Manually")
+# Statistical claim input
+st.subheader("✍️ Enter Your Statistical Claim")
 claim = st.text_area(
     "Enter your statistical claim here:", 
-    value=extracted_text,
     placeholder="e.g., 'This workout boosts endurance by 20% in 30 days' or 'Our product increases sales by 95%'",
     help="Enter any statistical claim you want to analyze for potential fallacies"
 )
@@ -403,10 +368,7 @@ with st.sidebar:
     )
     
     st.subheader("🎯 How to Use")
-    if OCR_AVAILABLE:
-        st.write("1. Take a photo of statistics OR enter text manually")
-    else:
-        st.write("1. Enter any statistical claim in the text area")
+    st.write("1. Enter any statistical claim in the text area")
     st.write("2. Optionally add numerical data for significance testing")
     st.write("3. Click 'Analyze' to get your results")
     st.write("4. Review the fallacies and lie level rating")

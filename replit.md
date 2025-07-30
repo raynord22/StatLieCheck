@@ -7,8 +7,8 @@ StatLieChecker is a Streamlit-based web application designed to analyze statisti
 ## Recent Changes (July 30, 2025)
 
 - Enhanced fallacy detection system with chapter-specific references to "How to Lie with Statistics"
-- Added optional camera OCR functionality using EasyOCR (gracefully degrades if not available)
 - Improved user interface with better formatting and educational content
+- Removed camera OCR functionality for cleaner user experience
 - Added comprehensive sidebar with Huff's principles and questions
 - Enhanced statistical significance testing with better error handling
 - Implemented chapter-by-chapter fallacy categorization (Chapters 1-10)
