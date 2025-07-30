@@ -664,6 +664,7 @@ dependencies = [
     { name = "nltk" },
     { name = "scipy" },
     { name = "streamlit" },
+    { name = "stripe" },
 ]
 
 [package.metadata]
@@ -671,6 +672,7 @@ requires-dist = [
     { name = "nltk", specifier = ">=3.9.1" },
     { name = "scipy", specifier = ">=1.16.1" },
     { name = "streamlit", specifier = ">=1.47.1" },
+    { name = "stripe", specifier = ">=12.4.0" },
 ]
 
 [[package]]
@@ -899,6 +901,19 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/19/da/cef67ed4614f04932a00068fe6291455deb884a04fd94f7ad78492b0e91a/streamlit-1.47.1.tar.gz", hash = "sha256:daed79763d1cafeb03cdd800b91aa9c7adc3688c6b2cbf4ecc2ca899aab82a2a", size = 9544057 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/c0/4d/701f5fcf9c0d388dad9d94ba272d333c7efa6231ddee1babc59d26dc14d2/streamlit-1.47.1-py3-none-any.whl", hash = "sha256:c7881549e3ba1daecfb5541f32ee6ff70e549f1c3400c92d045897cb7a29772a", size = 9944872 },
+]
+
+[[package]]
+name = "stripe"
+version = "12.4.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "requests" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/ed/48/98caed87572968a6f4077507080b64d21763e2b6109c26e7e994a65dbcb2/stripe-12.4.0.tar.gz", hash = "sha256:1cd1f5b0579867923081bacf594959d1f403f218223a06dc38273beb07d01567", size = 1414724 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/23/75/a513c6e3262e31d55b93d073629aaf6667c39ca3c00ff3d2e3cfc2d5cff1/stripe-12.4.0-py2.py3-none-any.whl", hash = "sha256:10720fcbf075a0b4e3eefb209a005c94564ac0f6166d284ff3164439f39af86c", size = 1654255 },
 ]
 
 [[package]]

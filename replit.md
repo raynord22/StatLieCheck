@@ -16,7 +16,7 @@ StatLieChecker is a Streamlit-based web application designed to analyze statisti
 - **MONETIZATION**: Free version includes ads, premium removes ads with one-time payment
 - **MONETIZATION**: Integrated Google AdSense with client ID ca-pub-5201605536254896
 - **MONETIZATION**: Created one-time $4.99 payment to remove ads forever
-- **MONETIZATION**: Added Stripe payment integration placeholder
+- **MONETIZATION**: Integrated live Stripe payment processing for $4.99 premium upgrade
 - **MONETIZATION**: Removed email tracking for simplified user experience
 
 ## User Preferences

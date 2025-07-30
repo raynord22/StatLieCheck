@@ -2,6 +2,8 @@ import streamlit as st
 import scipy.stats as stats
 import nltk
 from nltk.tokenize import word_tokenize
+import stripe
+import os
 
 # Download required NLTK data
 try:
@@ -11,11 +13,21 @@ except Exception as e:
 
 st.title("StatLieChecker: Spot Lies in Any Statistic")
 
+# Configure Stripe
+stripe.api_key = os.getenv('STRIPE_SECRET_KEY')
+
 # Initialize session state for tracking usage and ad-free status
 if 'analyses' not in st.session_state:
     st.session_state.analyses = 0
 if 'ad_free' not in st.session_state:
     st.session_state.ad_free = False
+
+# Check for successful payment in URL parameters
+query_params = st.query_params
+if 'payment_success' in query_params:
+    st.session_state.ad_free = True
+    st.success("🎉 Payment successful! You now have premium access with no ads!")
+    st.balloons()
 
 # Display user status
 if st.session_state.ad_free:
@@ -287,15 +299,42 @@ if not st.session_state.ad_free:
         st.write("• 💼 Professionals analyzing data")
         st.write("• 🧠 Anyone who values critical thinking")
     
-    # Stripe payment button placeholder
+    # Stripe payment integration
     st.markdown("### 💳 One-Time Payment - No Subscription")
     if st.button("💰 Go Premium - $4.99 (Remove Ads Forever)", type="primary", use_container_width=True):
-        st.info("🔗 **Stripe integration ready** - Add your Stripe checkout URL here")
-        st.markdown("**Next steps for Stripe integration:**")
-        st.write("1. Create a product in your Stripe dashboard for $4.99")
-        st.write("2. Generate a payment link")
-        st.write("3. Replace the URL below with your Stripe payment link")
-        st.code("# Your Stripe payment URL will go here")
+        try:
+            # Get the current URL for success/cancel redirects
+            current_url = "https://9832a157-0f17-427a-9c98-28d85bd5a2a8-00-1040ud2nwljxl.kirk.replit.dev"
+            
+            # Create Stripe checkout session
+            session = stripe.checkout.Session.create(
+                payment_method_types=['card'],
+                line_items=[{
+                    'price_data': {
+                        'currency': 'usd',
+                        'product_data': {
+                            'name': 'StatLieChecker Premium - Remove Ads Forever',
+                            'description': 'One-time payment for unlimited ad-free statistical analysis'
+                        },
+                        'unit_amount': 499,  # $4.99 in cents
+                    },
+                    'quantity': 1,
+                }],
+                mode='payment',
+                success_url=f'{current_url}?payment_success=true',
+                cancel_url=f'{current_url}?payment_cancelled=true',
+                metadata={
+                    'product': 'StatLieChecker Premium'
+                }
+            )
+            
+            # Display payment link
+            st.markdown(f"### [Click here to complete your payment →]({session.url})")
+            st.info("You'll be redirected to Stripe's secure payment page. After payment, you'll return here with premium access!")
+            
+        except Exception as e:
+            st.error("Payment system temporarily unavailable. Please try again later.")
+            st.caption(f"Error: {str(e)}")
     
     # Demo button for testing
     if st.button("🧪 Enable Ad-Free (Demo)", help="For testing - simulates successful payment"):
