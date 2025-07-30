@@ -1,0 +1,98 @@
+import streamlit as st
+import scipy.stats as stats
+import nltk
+from nltk.tokenize import word_tokenize
+import easyocr  # For OCR
+from io import BytesIO  # For image bytes
+import base64  # For premium PDF (optional)
+
+nltk.download('punkt', quiet=True)  # For parsing text
+
+st.title("StatLieChecker: Spot Lies in Any Statistic")
+
+# Camera input for OCR
+st.write("Option 1: Use Camera to Capture Statistic Text")
+camera_image = st.camera_input("Take a photo of the statistic")
+
+extracted_text = ""
+if camera_image:
+    # Extract text with EasyOCR
+    reader = easyocr.Reader(['en'], gpu=False)  # English, no GPU needed
+    bytes_data = camera_image.getvalue()
+    result = reader.readtext(bytes_data)
+    extracted_text = ' '.join([text[1] for text in result if text[1]])
+    if extracted_text:
+        st.success(f"Extracted Text: {extracted_text}")
+    else:
+        st.warning("No text detected—try a clearer photo or enter manually.")
+
+# Manual input (fallback or primary)
+st.write("Option 2: Enter the Statistic Manually")
+claim = st.text_area("Statistic claim (auto-filled if camera used)", value=extracted_text)
+sample_size = st.number_input("Sample size (n)", min_value=0, value=0)
+mean1 = st.number_input("Mean of group 1 (optional for t-test)", value=0.0)
+mean2 = st.number_input("Mean of group 2 (optional)", value=0.0)
+sd1 = st.number_input("SD of group 1 (optional)", value=0.0)
+sd2 = st.number_input("SD of group 2 (optional)", value=0.0)
+
+if st.button("Analyze Stat"):
+    if not claim:
+        st.error("Enter or capture a claim to analyze.")
+    else:
+        tokens = word_tokenize(claim.lower())
+
+        # Fallacy checks (expanded from book)
+        fallacies = []
+        lie_level = "Low"
+
+        if sample_size > 0 and sample_size < 30:
+            fallacies.append("Small Sample Fallacy: With n=" + str(sample_size) + ", results might be random luck, not real. Book tip: Small groups exaggerate extremes—like polling 5 friends on politics.")
+            lie_level = "Medium"
+        if "average" in tokens or "mean" in tokens:
+            fallacies.append("Misleading Averages: Averages hide outliers. Book example: 'Average' income looks high if one millionaire skews it.")
+            lie_level = "Medium"
+        if "percent" in tokens and ("increase" in tokens or "decrease" in tokens):
+            fallacies.append("Percentage Tricks: Percentages sound big without context. Book tip: 100% increase from 1 to 2 is just +1—check absolute numbers.")
+            lie_level = "Medium"
+        if "correlation" in tokens or "related" in tokens:
+            fallacies.append("Correlation vs Causation (Post Hoc Fallacy): Just because things happen together doesn't mean one causes the other. Book example: Roosters crow at dawn, but they don't cause the sun to rise.")
+            lie_level = "High"
+        if "graph" in tokens or "chart" in tokens:
+            fallacies.append("Graphical Tricks: Charts can distort reality. Book tip: Truncated axes make tiny changes look huge.")
+            lie_level = "Medium"
+        if "sample" in tokens or "survey" in tokens:
+            fallacies.append("Biased Sample: Surveys can skew if the group isn't representative. Book tip: Asking only rich people about taxes gets biased answers.")
+            lie_level = "High"
+        if "survive" in tokens or "success" in tokens:
+            fallacies.append("Survivorship Bias: Focusing on winners ignores failures. Book tip: WW2 planes showed bullet holes on survivors—but reinforce where holes weren't.")
+            lie_level = "High"
+        if "rate" in tokens and "base" not in tokens:
+            fallacies.append("Base-Rate Fallacy: Ignores overall odds. Book tip: A 99% accurate test for a rare disease (1/1000) still gives mostly false positives.")
+            lie_level = "High"
+        if not fallacies:
+            fallacies.append("No obvious fallacies—seems solid, but double-check sources and context. Book tip: Always ask 'Who says so?' and 'How do they know?'")
+
+        # Statistical significance
+        significance = ""
+        if mean1 and mean2 and sd1 and sd2 and sample_size > 1:
+            t_stat, p_value = stats.ttest_ind_from_stats(mean1, sd1, sample_size, mean2, sd2, sample_size)
+            significance = f"P-value: {p_value:.4f}. "
+            if p_value < 0.05:
+                significance += "Likely significant (not just chance)—but watch for biases."
+            else:
+                significance += "Not significant—could be random variation. Book tip: Insignificant differences are often hyped as breakthroughs."
+            if p_value > 0.05:
+                lie_level = "High"
+
+        # Output
+        st.write("### Lie Level: " + lie_level)
+        st.write("Claim: " + claim)
+        st.write("Fallacies Detected:")
+        for f in fallacies:
+            st.write("- " + f)
+        if significance:
+            st.write("Significance Check: " + significance)
+        st.write("Simple Explanation: Stats can trick you—use this to spot them and make better decisions in health, sports, or news.")
+        st.markdown("[Buy Premium Report ($5 on Gumroad for PDF with examples)](https://gumroad.com/yourproductlink)")
+
+st.write("Based on 'How to Lie with Statistics'—empowering anyone to check claims in everyday life.")
