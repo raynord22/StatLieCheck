@@ -16,6 +16,9 @@ st.title("StatLieChecker: Spot Lies in Any Statistic")
 # Configure Stripe
 stripe.api_key = os.getenv('STRIPE_SECRET_KEY')
 
+# Configure AdSense (public publisher ID)
+ADSENSE_CLIENT_ID = os.getenv('ADSENSE_CLIENT_ID', 'ca-pub-5201605536254896')
+
 # Initialize session state for tracking usage and ad-free status
 if 'analyses' not in st.session_state:
     st.session_state.analyses = 0
@@ -258,20 +261,21 @@ if st.button("🔍 Analyze Statistical Claim", type="primary", use_container_wid
             st.markdown("### 📢 Advertisement")
             
             # Google AdSense Integration
-            st.markdown("""
-            <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5201605536254896"
+            adsense_html = f"""
+            <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client={ADSENSE_CLIENT_ID}"
                  crossorigin="anonymous"></script>
             <!-- StatLieChecker Ad -->
             <ins class="adsbygoogle"
                  style="display:block"
-                 data-ad-client="ca-pub-5201605536254896"
+                 data-ad-client="{ADSENSE_CLIENT_ID}"
                  data-ad-slot="auto"
                  data-ad-format="auto"
                  data-full-width-responsive="true"></ins>
             <script>
-                 (adsbygoogle = window.adsbygoogle || []).push({});
+                 (adsbygoogle = window.adsbygoogle || []).push({{}});
             </script>
-            """, unsafe_allow_html=True)
+            """
+            st.markdown(adsense_html, unsafe_allow_html=True)
             
             # Alternative: Simple affiliate or promotional content
             st.info("📚 **Learn more statistical literacy** - Get the book 'How to Lie with Statistics' that inspired this tool!")
