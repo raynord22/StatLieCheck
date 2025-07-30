@@ -21,6 +21,8 @@ StatLieChecker is a Streamlit-based web application designed to analyze statisti
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
+Keep premium features honest - only promise what the app actually delivers.
+Focus on core value: detecting statistical tricks and manipulation in claims.
 
 ## System Architecture
 

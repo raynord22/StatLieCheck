@@ -84,10 +84,8 @@ if email:
             with col1:
                 st.markdown("**Premium Benefits:**")
                 st.write("• ✅ Unlimited daily analyses")
-                st.write("• 📊 Advanced statistical tools")
-                st.write("• 📄 Export detailed PDF reports")
-                st.write("• 🎯 Priority customer support")
-                st.write("• 📚 Exclusive educational content")
+                st.write("• 📊 All statistical fallacy detection types")
+                st.write("• 🔍 Statistical significance calculator")
             
             with col2:
                 st.markdown("**Perfect for:**")
@@ -347,8 +345,7 @@ if analyze_button and can_analyze:
         if not subscribed:
             st.markdown("---")
             st.info(
-                "🚀 **Want more features?** Premium users get unlimited analyses, "
-                "PDF export, advanced statistical tools, and priority support. "
+                "🚀 **Want unlimited analyses?** Premium users can analyze as many statistical claims as they want. "
                 "[Upgrade now for $4.99/month](https://buy.stripe.com/test_link)"
             )
 
